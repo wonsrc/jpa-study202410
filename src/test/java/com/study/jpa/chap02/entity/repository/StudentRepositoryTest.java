@@ -1,25 +1,30 @@
 package com.study.jpa.chap02.entity.repository;
 
+import ch.qos.logback.core.testUtil.TeeOutputStream;
 import com.study.jpa.chap02.entity.Student;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.*;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
+@Rollback(false)
 class StudentRepositoryTest {
 
     @Autowired
     StudentRepository studentRepository;
 
-    @BeforeEach
+//    @BeforeEach
+    @Test
     void insertData() {
         Student s1 = Student.builder()
                 .name("쿠로미")
@@ -72,5 +77,48 @@ class StudentRepositoryTest {
 
         System.out.println("\n\n\n\n\n");
         System.out.println(students.get(0));
+    }
+
+    @Test
+    @DisplayName("도시 또는 이름으로 학생 조회")
+    void nativeSQLTest() {
+        // given
+        String name = "춘식이";
+        String city = "제주도";
+        // when
+        List<Student> students = studentRepository.getStudentByNameOrCity(name, city);
+
+        // then
+        System.out.println("\n\n\n\n\n");
+        students.forEach(System.out::println);
+        System.out.println("\n\n\n\n\n");
+    }
+
+    @Test
+    @DisplayName("")
+    void jpqlTest() {
+        // given
+        String name = "춘";
+
+        // when
+        List<Student> students = studentRepository.searchByNameWithJPQL(name);
+
+        // then
+        System.out.println("\n\n\n\n\n");
+        students.forEach(System.out::println);
+        System.out.println("\n\n\n\n\n");
+    }
+
+    @Test
+    @DisplayName("JPQL로 삭제하기")
+    void deleteJPQLTest() {
+        // given
+        String name = "어피치";
+        String city = "제주도";
+        // when
+        studentRepository.deleteByNameAndCityWithJPQL(name, city);
+
+        // then
+        assertEquals(0, studentRepository.findByName(name).size());
     }
 }
