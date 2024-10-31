@@ -1,7 +1,9 @@
 package com.study.jpa.chap05.repository;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.study.jpa.chap05.dto.GroupAverageAgeDto;
 import com.study.jpa.chap05.entity.Group;
 import com.study.jpa.chap05.entity.Idol;
 import com.study.jpa.chap05.entity.QIdol;
@@ -72,6 +74,7 @@ class IdolCustomRepositoryTest {
         idolRepository.save(idol10);
         idolRepository.save(idol11);
     }
+
     @Test
     @DisplayName("커스텀 레포지토리에 선언한 메서드 호출")
     void testCustomCall() {
@@ -142,6 +145,70 @@ class IdolCustomRepositoryTest {
         }
     }
 
+    @Test
+    @DisplayName("그룹별 평균 나이 조회")
+    void groupAverageAgeTest() {
+       /*
+            SELECT G.group_name, AVG(I.age)
+            FROM tbl_idol I
+            JOIN tbl_group G
+            ON I.group_id = G.group_id
+            GROUP BY G.group_id
+            HAVING AVG(I.age) BETWEEN 20 AND 25
+         */
+        List<Tuple> result = factory
+                .select(idol.group.groupName, idol.age.avg())
+                .from(idol)
+                .groupBy(idol.group)
+                .having(idol.age.avg().between(20, 25))
+                .fetch();
+
+        for (Tuple tuple : result) {
+            {
+                String groupName = tuple.get(idol.group.groupName);
+                Double averageAge = tuple.get(idol.age.avg());
+
+                System.out.println("groupName = " + groupName);
+                System.out.println("averageAge = " + averageAge);
+
+            }
+
+        }
+    }
+
+    @Test
+    @DisplayName("그룹별 평균 나이 조회")
+    void groupAverageAgeDtoTest() {
+       /*
+            SELECT G.group_name, AVG(I.age)
+            FROM tbl_idol I
+            JOIN tbl_group G
+            ON I.group_id = G.group_id
+            GROUP BY G.group_id
+            HAVING AVG(I.age) BETWEEN 20 AND 25
+         */
+        List<GroupAverageAgeDto> result = factory
+                .select(
+                        Projections.constructor(
+                                GroupAverageAgeDto.class,
+                                idol.group.groupName,
+                                idol.age.avg()
+                        )
+                )
+                .from(idol)
+                .groupBy(idol.group)
+                .having(idol.age.avg().between(20, 25))
+                .fetch();
+
+        for (GroupAverageAgeDto dto : result) {
+            String groupName = dto.getGroupName();
+            Double averageAge = dto.getAverageAge();
+
+            System.out.println("groupName = " + groupName);
+            System.out.println("averageAge = " + averageAge);
+            System.out.println("\n\n");
+        }
+    }
 
 
 }
